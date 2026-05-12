@@ -24,11 +24,13 @@ from gradio_client import Client
 from scipy.io.wavfile import write as write_wav
 
 # Local imports
+from openai import OpenAI
 from constants import (
     FIREWORKS_API_KEY,
     FIREWORKS_MODEL_ID,
     FIREWORKS_MAX_TOKENS,
     FIREWORKS_TEMPERATURE,
+    LOCAL_BASE_URL,
     MELO_API_NAME,
     MELO_TTS_SPACES_ID,
     MELO_RETRY_ATTEMPTS,
@@ -39,9 +41,9 @@ from constants import (
 )
 from schema import ShortDialogue, MediumDialogue
 
-# Initialize Fireworks client, with Instructor patch
-fw_client = Fireworks(api_key=FIREWORKS_API_KEY)
-fw_client = instructor.from_fireworks(fw_client)
+# Initialize Local Client for Gemma
+client = OpenAI(base_url=LOCAL_BASE_URL, api_key=FIREWORKS_API_KEY)
+client = instructor.from_openai(client)
 
 # Initialize Hugging Face client
 hf_client = Client(MELO_TTS_SPACES_ID)
@@ -69,7 +71,7 @@ def generate_script(
 
 def call_llm(system_prompt: str, text: str, dialogue_format: Any) -> Any:
     """Call the LLM with the given prompt and dialogue format."""
-    response = fw_client.chat.completions.create(
+    response = client.chat.completions.create(
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": text},
